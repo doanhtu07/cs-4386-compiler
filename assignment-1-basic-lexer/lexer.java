@@ -12,7 +12,8 @@ import java.util.Set;
 
 class Lexer {
     public static class DFA {
-        List<String> RESERVED_WORDS = Arrays.asList("TAGS", "BEGIN", "SEQUENCE", "INTEGER", "DATE", "END");
+        HashSet<String> RESERVED_WORDS = new HashSet<>(
+                Arrays.asList("TAGS", "BEGIN", "SEQUENCE", "INTEGER", "DATE", "END"));
         List<Integer> WHITESPACES = Arrays.asList(9, 10, 11, 12, 13, 32);
         List<Integer> SPECIALS = Arrays.asList((int) '"', (int) '|', (int) '(', (int) ')', (int) ',', (int) '{',
                 (int) '}');
@@ -20,6 +21,7 @@ class Lexer {
 
         List<Integer> UPPER_AZ = new ArrayList<>();
         List<Integer> LOWER_AZ = new ArrayList<>();
+        HashMap<String, String> TOKEN_NAMES = new HashMap<>();
 
         enum State {
             WhiteSpace,
@@ -49,6 +51,7 @@ class Lexer {
 
         public DFA() {
             initAlphabets();
+            initTokenNames();
             drawPartialDFA();
         }
 
@@ -65,6 +68,33 @@ class Lexer {
 
         public String encodeTransition(State state, int characterInt) {
             return state.name() + " " + Integer.toString(characterInt);
+        }
+
+        public void initTokenNames() {
+            // Whitespaces
+            TOKEN_NAMES.put(Character.toString((char) 9), "HORIZONTAL TABULATION");
+            TOKEN_NAMES.put(Character.toString((char) 10), "LINE FEED");
+            TOKEN_NAMES.put(Character.toString((char) 11), "VERTICAL TABULATION");
+            TOKEN_NAMES.put(Character.toString((char) 12), "FORM FEED");
+            TOKEN_NAMES.put(Character.toString((char) 13), "CARRIAGE RETURN");
+            TOKEN_NAMES.put(Character.toString((char) 32), "SPACE");
+
+            // Specials
+            TOKEN_NAMES.put(Character.toString('{'), "LCURLY");
+            TOKEN_NAMES.put(Character.toString('}'), "RCURLY");
+            TOKEN_NAMES.put(Character.toString(','), "COMMA");
+            TOKEN_NAMES.put(Character.toString('('), "LPAREN");
+            TOKEN_NAMES.put(Character.toString(')'), "RPAREN");
+            TOKEN_NAMES.put(Character.toString('|'), "VLINE");
+            TOKEN_NAMES.put(Character.toString('"'), "QUOTE");
+
+            // Normal states
+            TOKEN_NAMES.put(State.TypeRef1.name(), "TypeRef");
+            TOKEN_NAMES.put(State.Identifier1.name(), "Identifier");
+            TOKEN_NAMES.put(State.Number1.name(), "Number");
+            TOKEN_NAMES.put(State.Number2.name(), "Number");
+            TOKEN_NAMES.put(State.Assign3.name(), "ASSIGN");
+            TOKEN_NAMES.put(State.Range2.name(), "Range_Separator");
         }
 
         public void drawPartialDFA() {
@@ -136,40 +166,66 @@ class Lexer {
         }
 
         public boolean accepts(String input) {
+            State prevState = null;
             State currentState = startState;
+            StringBuilder sb = new StringBuilder();
 
             for (int i = 0; i < input.length(); i++) {
                 char character = input.charAt(i);
 
                 // DEBUG
-                System.out.println(i + "-->" + (int) character + "-->" + character);
-                System.out.println("Before: " + currentState.name());
+                // System.out.println(i + "-->" + (int) character + "-->" + character);
+                // System.out.println("Before: " + currentState.name());
 
                 // Escape right away if character is invalid => So our DFA model is not complete
                 // but PARTIAL
                 if (!transitions.containsKey(encodeTransition(currentState, character))) {
                     // DEBUG
-                    System.out.println(i + "-->" + (int) character + "-->" + character);
-                    System.out.println(currentState.name());
-                    System.out.println("Invalid");
-                    System.out.println();
+                    // System.out.println(i + "-->" + (int) character + "-->" + character);
+                    // System.out.println(currentState.name());
+                    // System.out.println();
+
+                    sb.append(character);
+                    System.out.println("Token: [" + sb.toString() + "] --> " + "Invalid");
 
                     return false;
                 }
 
+                prevState = currentState;
                 currentState = transitions.get(encodeTransition(currentState, character));
 
                 // DEBUG
-                System.out.println("After: " + currentState.name());
-                System.out.println();
+                // System.out.println("After: " + currentState.name());
+                // System.out.println();
+
+                if (sb.length() == 1 && TOKEN_NAMES.containsKey(sb.toString())) {
+                    // Single character token
+                    System.out.println("Token: [" + sb.toString() + "] --> [" + TOKEN_NAMES.get(sb.toString()) + "]");
+                    sb = new StringBuilder(); // Reset for next token sequence
+                } else if (sb.length() != 0 && prevState != currentState && finalStates.contains(prevState)) {
+                    // Multi-character token
+                    if (RESERVED_WORDS.contains(sb.toString())) {
+                        System.out.println(
+                                "Token: [" + sb.toString() + "] --> [" + "RESERVED" + " - " + sb.toString() + "]");
+                    } else {
+                        System.out
+                                .println("Token: [" + sb.toString() + "] --> [" + TOKEN_NAMES.get(prevState.name())
+                                        + "]");
+                    }
+                    sb = new StringBuilder(); // Reset for next token sequence
+                }
+
+                // Append current character to current token
+                sb.append(character);
             }
 
             // DEBUG
-            System.out.println(currentState.name());
-            if (finalStates.contains(currentState)) {
-                System.out.println("Not Successful");
+            // System.out.println(currentState.name());
+            // System.out.println();
+
+            if (!finalStates.contains(currentState)) {
+                System.out.println("Token: [" + sb.toString() + "] --> " + "Incomplete");
             }
-            System.out.println();
 
             return finalStates.contains(currentState);
         }
