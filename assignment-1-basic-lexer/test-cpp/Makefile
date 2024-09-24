@@ -1,6 +1,6 @@
 # Variables
 CXX = g++
-CXXFLAGS = -std=c++11
+CXXFLAGS = -g -std=c++11 # -g is for debugging flag
 TARGET = lexer
 SRC = lexer.cpp
 OBJ_DIR = build
