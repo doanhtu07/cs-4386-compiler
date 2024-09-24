@@ -1,0 +1,8 @@
+# clangd configuration file
+
+CompileFlags:
+  Add: [-std=c++11] # Specify C++ standard
+  Remove: [-Werror] # Remove treating warnings as errors
+
+InlayHints:
+  Enabled: No # Enable inlay hints for function parameters
