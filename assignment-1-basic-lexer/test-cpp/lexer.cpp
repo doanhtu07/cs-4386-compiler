@@ -209,7 +209,7 @@ public:
       if (currentString.size() == 1 &&
           TOKEN_NAMES.find(currentString) != TOKEN_NAMES.end()) {
 
-        cout << "One: [" << currentString << "] --> ["
+        cout << "Token: [" << currentString << "] --> ["
              << TOKEN_NAMES[currentString] << "]" << endl;
 
         oss.str(""); // Clear the contents
@@ -220,10 +220,10 @@ public:
                finalStates.find(prevState) != finalStates.end()) {
 
         if (RESERVED_WORDS.find(currentString) != RESERVED_WORDS.end()) {
-          cout << "Two: [" << currentString << "] --> [" << "RESERVED" << " - "
-               << currentString << "]" << endl;
+          cout << "Token: [" << currentString << "] --> [" << "RESERVED"
+               << " - " << currentString << "]" << endl;
         } else {
-          cout << "Three: [" << currentString << "] --> ["
+          cout << "Token: [" << currentString << "] --> ["
                << TOKEN_NAMES[getStateName(prevState)] << "]" << endl;
         }
 
