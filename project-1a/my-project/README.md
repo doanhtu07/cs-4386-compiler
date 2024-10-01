@@ -9,5 +9,5 @@ make
 ## Run
 
 ```
-cat input.txt | ./lexer
+cat input.txt | ./lexer >> output.txt
 ```
