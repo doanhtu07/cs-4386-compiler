@@ -1,0 +1,8 @@
+program
+   var SMALLER as int ;
+begin
+   if SMALLER > BIGGER then
+      TEMP := SMALLER ;
+   end ;
+end
+
